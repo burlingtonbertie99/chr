@@ -1,0 +1,11 @@
+Here is an example on how to start the example webserver on port 8080:
+
+> swipl -q -s server.pl -g 'server(8080)'
+You can add new constraints by simple calling the root URL:
+
+> curl -X GET http://localhost:8080/?gcd=12
+12
+> curl -X GET http://localhost:8080/?gcd=8
+4
+> curl -X GET http://localhost:8080/?gcd=16
+4

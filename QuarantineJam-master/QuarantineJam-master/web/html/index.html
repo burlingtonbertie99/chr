@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<script src="/static/js/vendor/mithril-2.0.4.js"></script>
+<img src="/static/svg/pagelayout.svg" />
+<div id="app"></div>
+
+<script>
+  let state = null
+  let oops = ''
+
+const App = {
+  view() {
+    if (!state) {
+      return m('div', 'Loading...')
+    }
+    return m('div',
+      m('h2', 'The Text Farmer'),
+
+      state.actions.map(action =>
+        m('button', {
+          onclick() { act(action) }
+        }, action),
+      ),
+
+      m('pre', JSON.stringify(state.things, undefined, 2)),
+      m('pre', JSON.stringify(state.assets, undefined, 2)),
+      m('pre', JSON.stringify(state.env, undefined, 2)),
+      oops && m('pre', oops)
+    )
+  }
+}
+
+async function act(action) {
+  const response = await m.request({
+    method: 'POST',
+    url: '/game_turn',
+    body: { action },
+  })
+
+  state = {
+    things: response.things.reduce((hash, [name, id]) => {
+      hash[id] = { name: name, status: {} }
+      return hash
+    }, {}),
+    assets: response.assets.reduce((hash, [name, amount]) => {
+      hash[name] = amount
+      return hash
+    }, {}),
+    env: response.env.reduce((hash, [key, value]) => {
+      hash[key] = value
+      return hash
+    }, {}),
+    actions: response.available_actions,
+  }
+  response.statuses.forEach(([id, name, value]) => {
+    state.things[id].status[name] = value
+  })
+  oops = response.error
+}
+
+act('get_state')
+
+m.mount(document.getElementById('app'), App)
+</script>
